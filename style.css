@@ -1,0 +1,38 @@
+body {
+  background-color: #ccc;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+p {
+  font-size: 20px;
+}
+
+.zero,
+.one,
+.two {
+  width: 6rem;
+  height: 6rem;
+  border: 1px solid black;
+  text-align: center;
+  background-color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 40px;
+
+  &:hover {
+    background-color: lavender;
+    color: brown;
+    cursor: pointer;
+  }
+}

@@ -5,6 +5,14 @@ const gameBoard = (function () {
     [0, 0, 0],
   ];
 
+  const clear = function () {
+    for (let i = 0; i < 3; i++) {
+      for (let j = 0; j < 3; j++) {
+        board[i][j] = 0;
+      }
+    }
+  };
+
   const getBoard = function () {
     return board;
   };
@@ -95,84 +103,92 @@ const gameBoard = (function () {
     check,
     isFull,
     getBoard,
+    clear,
   };
 })();
 
-const displayBoard = function () {
-  let numberMapper = { 0: "⬜", 1: "❌", 2: "⭕" };
+const displayBoard = function (screenBoard) {
+  let numberMapper = { 0: "", 1: "❌", 2: "⭕" };
   let board = gameBoard.getBoard();
 
-  let decoratedBoard = board.map((row) => {
-    return row.map((val) => {
-      return numberMapper[val];
+  screenBoard.querySelectorAll(".row").forEach((row, i) => {
+    row.querySelectorAll("div").forEach((cell, j) => {
+      cell.textContent = numberMapper[board[i][j]];
     });
-  });
-
-  decoratedBoard.forEach((row) => {
-    console.log(row.join(" "));
   });
 };
 
-const Player = function (val) {
+const Player = function (val, symbol) {
   const getValue = function () {
     return val;
   };
+  const getSymbol = function () {
+    return symbol;
+  };
   return {
     getValue,
+    getSymbol,
   };
 };
 
 const game = (function () {
-  let currentPlayers = { 0: Player(1), 1: Player(2) };
+  const screenBoard = document.querySelector(".board");
 
-  const getInput = function () {
-    let row = prompt("Enter row");
-    let col = prompt("Enter col");
-    row = parseInt(row);
-    col = parseInt(col);
-
-    if (isNaN(row) || isNaN(col) || row < 0 || row > 2 || col < 0 || col > 2) {
-      alert("Invalid move");
-      return getInput();
-    }
-    return [row, col];
-  };
+  let currentPlayers = { 0: Player(1, "❌"), 1: Player(2, "⭕") };
+  let turn = 0;
+  let playing = true;
+  let playerWon;
+  const player = document.querySelector("#player");
+  const symbol = document.querySelector("#symbol");
 
   const doOneRound = function (currentTurn, playerValue, row, col) {
     if (gameBoard.place(playerValue, row, col)) {
-      if (gameBoard.check()) {
-        alert("Congratulations, You have won, Player " + playerValue);
-        return [false, 1 - currentTurn];
-      } else if (gameBoard.isFull()) {
-        alert("Game Over, It's draw");
-        return [false, 1 - currentTurn];
-      }
-      return [true, 1 - currentTurn];
+      return [
+        !gameBoard.check() && !gameBoard.isFull(),
+        1 - currentTurn,
+        gameBoard.check(),
+      ];
     }
     alert("Invalid move");
-    return [true, currentTurn];
+    return [true, currentTurn, false];
   };
 
-  const play = function () {
-    displayBoard();
-    let turn = 0;
-    let playing = true;
-    while (playing) {
-      let [row, col] = getInput();
-      [playing, turn] = doOneRound(
-        turn,
-        currentPlayers[turn].getValue(),
-        row,
-        col,
-      );
-      displayBoard();
-    }
-  };
+  screenBoard.querySelectorAll(".row").forEach((row, i) => {
+    row.querySelectorAll("div").forEach((cell, j) => {
+      cell.addEventListener("click", function () {
+        [playing, turn, playerWon] = doOneRound(
+          turn,
+          currentPlayers[turn].getValue(),
+          i,
+          j,
+        );
 
-  return {
-    play,
-  };
+        displayBoard(screenBoard);
+
+        setTimeout(() => {
+          if (!playing) {
+            if (playerWon) {
+              alert(
+                "Congratulations! Player " +
+                  currentPlayers[1 - turn].getValue() +
+                  ", you won!",
+              );
+            } else {
+              alert("Game Over! It's a draw!");
+            }
+
+            playing = true;
+            turn = 0;
+            player.textContent = currentPlayers[turn].getValue();
+            symbol.textContent = currentPlayers[turn].getSymbol();
+            gameBoard.clear();
+            displayBoard(screenBoard);
+          }
+        }, 100);
+
+        player.textContent = currentPlayers[turn].getValue();
+        symbol.textContent = currentPlayers[turn].getSymbol();
+      });
+    });
+  });
 })();
-
-const playButton = document.querySelector("button");
-playButton.addEventListener("click", game.play);
